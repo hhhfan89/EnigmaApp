@@ -1,0 +1,50 @@
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1" >
+	
+	<TextView
+	    android:id="@+id/questionTitle"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_horizontal"
+	    android:paddingBottom="10dp"
+	    android:paddingTop="10dp"
+	    android:text="Domanda 1"
+	    android:textSize="18sp"
+	    android:textStyle="bold|normal" />
+	
+	<TextView
+	    android:id="@+id/question"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="center_horizontal"
+	    android:paddingBottom="10dp"
+	    android:paddingTop="10dp"
+	    android:text="Domanda Domanda Domanda Domanda Domanda Domanda Domanda Domanda Domanda "
+	    android:textSize="14sp"
+	    android:textStyle="bold|normal" />
+	
+	<EditText
+        android:id="@+id/answer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:hint="la tua risposta.."
+        android:paddingBottom="10dp"
+        android:paddingTop="10dp"
+        android:textSize="18sp"
+        android:textStyle="normal"
+        android:lines="1"
+        android:imeOptions="actionNext" />
+
+	<Button
+        android:id="@+id/answerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.2"
+        android:onClick="sendAnswer"
+        android:text="Invia la risposta!" />
+    
+</LinearLayout>

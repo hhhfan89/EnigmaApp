@@ -1,0 +1,22 @@
+1) Identificazione univoca del telefono, tramite imei/mac: fare doppio controllo. 
+Controllare se si può in qualche modo alterare tale info. 
+Bisogna comunque informare l'utente che si sta tracciando il suo numero di imei/mac, probabilmente.
+
+	1a) non si può prendere il mac address dalla 6.0 in su.
+	
+
+2) Salvataggio imei/mac associata a username, idea poca concreta, perchÃ¨ implicherebbe che l'utente possa accedere anche con un username differente con lo stesso telefono.
+3) Campi tabella: ID, IMEI, MAC, numeroVite.
+controllo se può giocare: se IMEI e MAC diversi da quelli in possesso  &&  numeroVite > 0;
+se non può giocare: messaggio che invita ad acquistare n vite (n tbd) --> se si acquistano n vite, update tabella.
+4) prevedere cryptatura IMEI/MAC con chiave solo in mio possesso.
+
+
+fare sia db su device (fatto) che verifica lato web service!!!
+
+
+20/01
+Si può aggiungere su DB locale/remote un campo di check (timestamp di inserimento/update, ad es.), che viene passato
+da Android al WS, così 1) si verifica se ci è stata una manomissione del db locale e 2) si possono fare query più 
+efficienti, senza usare imei/mac/deviceName, in accoppiata con "idOnRemoteDB" --> quando interrogo il DB remoto, 
+controllo sia l'idOnRemoteDB che il campo check, e tutti e due devono essere uguali per tutti e due i DB.
