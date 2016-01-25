@@ -6,6 +6,14 @@ public class ClientResponse {
 	private int livesLeft;
 	private int idOnRemoteDB;
 	
+	public ClientResponse() {}
+	
+	public ClientResponse(int livesLeft, int idOnRemoteDB) {
+		super();
+		this.livesLeft = livesLeft;
+		this.idOnRemoteDB = idOnRemoteDB;
+	}
+	
 	public boolean isAlreadyRegistered() {
 		return alreadyRegistered;
 	}

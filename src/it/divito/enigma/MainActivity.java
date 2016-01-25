@@ -1,6 +1,7 @@
 package it.divito.enigma;
 
 import it.divito.enigma.database.DatabaseAdapter;
+import it.divito.enigma.database.UserInfo;
 import it.divito.enigma.util.Constants;
 import it.divito.enigma.ws.Client;
 import it.divito.enigma.ws.ClientResponse;
@@ -31,6 +32,7 @@ public class MainActivity extends Activity {
 	private String deviceName;
 	private String macAddress;
 	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -39,45 +41,11 @@ public class MainActivity extends Activity {
 		myApp = ((MyApplication) this.getApplication());
 		dbAdapter = myApp.getDbAdapter();
 		
-		/*
-		WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-		Log.d("wifiManager", ""+wifiManager.isWifiEnabled());
-		if(wifiManager.isWifiEnabled()) {
-		    // WIFI ALREADY ENABLED. GRAB THE MAC ADDRESS HERE
-		    WifiInfo info = wifiManager.getConnectionInfo();
-		    String macAddress = info.getMacAddress();
-		    Log.d("macAddress", macAddress);
-		} else {
-		    // ENABLE THE WIFI FIRST
-		    wifiManager.setWifiEnabled(true);
+		// TODO: tenersi in memoria l'idRemoto finché l'app è aperta, così evito di accedere n volte al db locale
+		// (tanto è una variabile int, niente di che)
+	}
+	
 
-		    // WIFI IS NOW ENABLED. GRAB THE MAC ADDRESS HERE
-		    WifiInfo info = wifiManager.getConnectionInfo();
-		    String macAddress = info.getMacAddress();
-		    Log.d("macAddress", macAddress);
-		  //  wifiManager.setWifiEnabled(false);
-		}
-		
-		*/
-		
-		
-	}
-	
-	public String getImeiNumber() {
-		TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		return telephonyManager.getDeviceId();
-	}
-	
-	public String getMacAddress() {
-		// Si può ricavare il macAddress solo dalla versione 6 in giù, altrimenti restituisce sempre una costante
-		int currentApiVersion = android.os.Build.VERSION.SDK_INT;
-		if(currentApiVersion < 23) {
-			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-			return wifiManager.getConnectionInfo().getMacAddress();
-		}
-		return Constants.NOT_AVAILABLE;
-	}
-	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
@@ -114,6 +82,23 @@ public class MainActivity extends Activity {
 			return rootView;
 		}
 	}
+
+	public String getImeiNumber() {
+		TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		return telephonyManager.getDeviceId();
+	}
+	
+	
+	public String getMacAddress() {
+		// Si può ricavare il macAddress solo dalla versione 6 in giù, altrimenti restituisce sempre una costante
+		int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+		if(currentApiVersion < 23) {
+			WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+			return wifiManager.getConnectionInfo().getMacAddress();
+		}
+		return Constants.NOT_AVAILABLE;
+	}
+	
 	
 	public String getDeviceName() {
 	    String manufacturer = Build.MANUFACTURER;
@@ -139,28 +124,33 @@ public class MainActivity extends Activity {
 	} 
 	
 	public void play(View v) {
-		if(checkDevice()) {
-			startGame();
-		}
+//		if(checkDevice()) {
+//			startGame();
+//		}
+		checkDevice();
 	}
 	
-	private boolean checkDevice() {
+	private void checkDevice() {
 		dbAdapter.open(); 
 		imeiNumber = getImeiNumber();
 		deviceName = getDeviceName();
 		macAddress = getMacAddress();
 		
-		long livesLeft = dbAdapter.insert(imeiNumber, deviceName, macAddress);
+		// Ritorna userInfo(livesLeft, idOnRemoteDB):
+		//		- livesLeft: 1 se appena inserito, n se inserito in precedenza
+		//		- idOnRemoteDB: 0 se appena inserito, n se inserito in precedenza
+		UserInfo userInfo = dbAdapter.insert(imeiNumber, deviceName, macAddress);
+		userInfo.setImei(imeiNumber);
+		userInfo.setDeviceName(deviceName);
+		userInfo.setMacAddress(macAddress);
 		dbAdapter.close();
 		
 		// Nessuna vita rimasta (su DB locale)
-		if(livesLeft == 0) {
+		if(userInfo.getLivesLeft() == 0) {
 			createNoLivesAlertDialog().show();
-			return false;
 		}
 		
-		new RetrieveFeedTask().execute();
-		return true;
+		new RetrieveFeedTask(this, userInfo.getIdOnRemoteDB()!=0 ? true : false, userInfo).execute();
 	}
 	
 	private AlertDialog createNoLivesAlertDialog() {
@@ -198,19 +188,48 @@ public class MainActivity extends Activity {
 	
 	class RetrieveFeedTask extends AsyncTask<Void, Long, Boolean> {
 
-		int livesLeft;
+		private int livesLeft;
+		private ProgressDialog mDialog;
+		private boolean exception;
 		
+		private Context mContext;
+		private boolean hasIdOnRemoteDb;
+		private UserInfo userInfo;
+		
+		public RetrieveFeedTask(Context context, boolean hasIdOnRemoteDb, UserInfo userInfo) {
+			this.exception = false;
+			this.mContext = context;
+			this.userInfo = userInfo;
+			this.hasIdOnRemoteDb = hasIdOnRemoteDb;
+			mDialog = new ProgressDialog(context);
+			mDialog.setMax(100);
+	        mDialog.setMessage("Uploading..");
+	        mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        mDialog.setProgress(0);
+	        mDialog.show();
+		}
 		
 	    protected Boolean doInBackground(Void... params) {
 	        try {
 	        	Client client = new Client("http://10.0.3.2:8080/AlessioWebapp/users/");
-				ClientResponse clientResponse = client.postBaseURI(imeiNumber, macAddress, deviceName, "checkUser");
-				livesLeft = clientResponse.getLivesLeft();
-				dbAdapter.updateUser(1, clientResponse.getIdOnRemoteDB());
+	        	ClientResponse clientResponse = new ClientResponse();
+	        	int tentativi = 0;
+	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
+	        		clientResponse = client.postBaseURI(userInfo, hasIdOnRemoteDb ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
+	        		tentativi++;
+	        	}
+
+	        	// Se è stato recuperato l'id remoto, faccio l'update, altrimenti.. (TODO)
+				if(clientResponse.getIdOnRemoteDB()>0) {
+					livesLeft = clientResponse.getLivesLeft();
+					dbAdapter.updateUser(1, clientResponse.getIdOnRemoteDB());
+				} else {
+					// TODO: gestione errore remoto (id su db remote non ritornato)
+				}
 	        } catch (Exception e) {
-	        	return false;
+	        	exception = true;
 	        }
-	        return true;
+	        return exception;
 	    }
 	    
 	    public int getLivesLeft() {
@@ -219,20 +238,31 @@ public class MainActivity extends Activity {
 
 	    @Override
 	    protected void onPostExecute(Boolean result) {
-	    	Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
-			intent.putExtra("imeiNumber", imeiNumber);
-			intent.putExtra("deviceName", deviceName);
-			intent.putExtra("macAddress", macAddress);
-			startActivity(intent);
+	    	mDialog.dismiss();
+	    	if(!exception) {
+		    	Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
+				intent.putExtra("imeiNumber", imeiNumber);
+				intent.putExtra("deviceName", deviceName);
+				intent.putExtra("macAddress", macAddress);
+				startActivity(intent); 
+			} else {
+				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
+				alertDialogBuilder.setCancelable(false).setMessage("Errore");
+				alertDialogBuilder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+		    		public void onClick(DialogInterface dialog,int id) {
+		    			dialog.cancel();
+		    		}
+		        });
+				alertDialogBuilder.create().show();
+			}
 	    }
 	    
 	    @Override
 	    protected void onProgressUpdate(Long... progress) {
-	        //int percent = (int)(100.0*(double)progress[0]/mFileLen + 0.5);
-	        //mDialog.setProgress(percent);
-	    	ProgressDialog.show(MainActivity.this, "Loading", "Wait while loading...");
+	        int percent = (int)(100.0*(double)progress[0] + 0.5);
+	        mDialog.setProgress(percent);
 	    }
-
+	    
 	}
 }
 

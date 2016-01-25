@@ -41,27 +41,31 @@ public class UsersTable {
 		return values;
 	}
 	
-	public long insert(String imeiNumber, String deviceName, String macAddress) {
+	public UserInfo insert(String imeiNumber, String deviceName, String macAddress) {
 		ContentValues initialValues = createContentValues(imeiNumber, deviceName, macAddress);
-		long result;
+		//long result;
+		UserInfo userInfo = null;
 		try {
-			result = database.insertOrThrow(Constants.TABLE_NAME, null, initialValues);
+			database.insertOrThrow(Constants.TABLE_NAME, null, initialValues);
+			userInfo = new UserInfo(Constants.DEFAULT_LIVES_LEFT, Constants.DEFAULT_LIVES_LEFT);
 		} catch (SQLiteConstraintException e) {
 			// Vuol dire che è già presente nel DB, ma comunque può avere altre vite..
-			result = checkLives(imeiNumber, deviceName, macAddress);
+			userInfo = checkLives(imeiNumber, deviceName, macAddress);
 		}
-		return result;
+		return userInfo;
+		//return result;
 	}
 	
 	
-	public int checkLives(String imeiNumber, String deviceName, String macAddress) {
+	public UserInfo checkLives(String imeiNumber, String deviceName, String macAddress) {
 		String selection = Constants.COLUMN_IMEI + " = ? AND "
 						 + Constants.COLUMN_DEVICE_NAME + " = ? AND " 
 						 + Constants.COLUMN_MAC + " = ?";
-		Cursor c = database.query(Constants.TABLE_NAME, new String[]{Constants.COLUMN_LIVES}, selection, new String[]{imeiNumber, deviceName, macAddress}, null, null, null);
-		if(c.moveToNext())
-			return c.getInt(0);
-		return -1;
+		Cursor c = database.query(Constants.TABLE_NAME, new String[]{Constants.COLUMN_LIVES, Constants.COLUMN_ID_ON_REMOTE_DB}, selection, new String[]{imeiNumber, deviceName, macAddress}, null, null, null);
+		if(c.moveToNext()) {
+			return new UserInfo(c.getInt(0), c.getInt(1));
+		}
+		return null;
 	}
 
 

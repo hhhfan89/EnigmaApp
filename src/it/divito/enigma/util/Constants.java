@@ -18,5 +18,10 @@ public interface Constants {
 	public static final String DEVICE_NAME = "deviceName";
 	public static final String MAC_ADDRESS = "macAddress";
 	
+	public static final int DEFAULT_LIVES_LEFT = 1;
+	public static final int DEFAULT_ID_ON_REMOTE_DB = 0;
+	
+	public static final String WS_OPERATION_SAVE_USER = "saveUser";
+	public static final String WS_OPERATION_CHECK_USER = "checkUser";
 	
 }

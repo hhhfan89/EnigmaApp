@@ -58,7 +58,7 @@ public class QuestionActivity extends Activity {
 	
 	private int checkLives() {
 		dbAdapter.open();
-		int lives = dbAdapter.checkLives(imeiNumber, deviceName, macAddress);
+		int lives = dbAdapter.checkLives(imeiNumber, deviceName, macAddress).getLivesLeft();
 		dbAdapter.close();	
 		return lives;
 	}

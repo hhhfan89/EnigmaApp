@@ -38,15 +38,15 @@ public class DatabaseAdapter {
     }
  
 	
-	public long insert(String imeiNumber, String deviceName, String macAddress) {
+	public UserInfo insert(String imeiNumber, String deviceName, String macAddress) {
 		return settingsTable.insert(imeiNumber, deviceName, macAddress);
 	}
 
-
-	public int checkLives(String imeiNumber, String deviceName, String macAddress) {
+	
+	public UserInfo checkLives(String imeiNumber, String deviceName, String macAddress) {
 		return settingsTable.checkLives(imeiNumber, deviceName, macAddress);
 	}
-
+	
 
 	public boolean removeLife(String imeiNumber, String deviceName, String macAddress, int livesLeft) {
 		return settingsTable.removeLife(imeiNumber, deviceName, macAddress, livesLeft);
