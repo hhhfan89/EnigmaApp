@@ -1,5 +1,7 @@
 package it.divito.enigma;
 
+import java.io.File;
+
 import it.divito.enigma.database.DatabaseAdapter;
 import it.divito.enigma.database.UserInfo;
 import it.divito.enigma.util.Constants;
@@ -211,7 +213,7 @@ public class MainActivity extends Activity {
 	    protected String doInBackground(Void... params) {
 	    	ClientResponse clientResponse = new ClientResponse();
 	        try {
-	        	Client client = new Client("http://10.0.3.2:8080/AlessioWebapp/users/");
+	        	Client client = new Client(Constants.WS_HOST + File.separator + Constants.WS_APP_NAME);
 	        	int tentativi = 0;
 	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
 	        		clientResponse = client.postBaseURI(userInfo, hasIdOnRemoteDb ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
