@@ -64,13 +64,13 @@ public class Client {
             
     	} catch (JSONException e) {
     		System.out.println("JSONException: " + e.getMessage());
-    		clientResponse = new ClientResponse(-1, -1);
+    		clientResponse = Utility.createClientResponseError(e.getMessage());
     	} catch (ClientProtocolException e) {
     		System.out.println("ClientProtocolException: " + e.getMessage());
-    		clientResponse = new ClientResponse(-1, -1);
+    		clientResponse = Utility.createClientResponseError(e.getMessage());
     	} catch (IOException e) {
-    		System.out.println("JSONException: " + e.getMessage());
-    		clientResponse = new ClientResponse(-1, -1);
+    		System.out.println("IOException: " + e.getMessage());
+    		clientResponse = Utility.createClientResponseError(e.getMessage());
     	}
     	
     	return clientResponse;

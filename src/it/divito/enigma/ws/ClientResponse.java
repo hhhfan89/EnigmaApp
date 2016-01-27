@@ -5,6 +5,7 @@ public class ClientResponse {
 	private boolean alreadyRegistered;
 	private int livesLeft;
 	private int idOnRemoteDB;
+	private String errorMessage;
 	
 	public ClientResponse() {}
 	
@@ -31,6 +32,14 @@ public class ClientResponse {
 	}
 	public void setIdOnRemoteDB(int idOnRemoteDB) {
 		this.idOnRemoteDB = idOnRemoteDB;
+	}
+
+	public String getErrorMessage() {
+		return errorMessage;
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
 	}
 	
 }

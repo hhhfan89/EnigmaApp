@@ -3,6 +3,7 @@ package it.divito.enigma;
 import it.divito.enigma.database.DatabaseAdapter;
 import it.divito.enigma.database.UserInfo;
 import it.divito.enigma.util.Constants;
+import it.divito.enigma.util.Utility;
 import it.divito.enigma.ws.Client;
 import it.divito.enigma.ws.ClientResponse;
 import android.app.Activity;
@@ -186,33 +187,31 @@ public class MainActivity extends Activity {
 		startActivity(intent);
 	}
 	
-	class RetrieveFeedTask extends AsyncTask<Void, Long, Boolean> {
+	class RetrieveFeedTask extends AsyncTask<Void, Long, String> {
 
 		private int livesLeft;
 		private ProgressDialog mDialog;
-		private boolean exception;
+		private boolean canPlay;
 		
 		private Context mContext;
 		private boolean hasIdOnRemoteDb;
 		private UserInfo userInfo;
 		
 		public RetrieveFeedTask(Context context, boolean hasIdOnRemoteDb, UserInfo userInfo) {
-			this.exception = false;
+			this.canPlay = false;
 			this.mContext = context;
 			this.userInfo = userInfo;
 			this.hasIdOnRemoteDb = hasIdOnRemoteDb;
 			mDialog = new ProgressDialog(context);
-			mDialog.setMax(100);
-	        mDialog.setMessage("Uploading..");
-	        mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-	        mDialog.setProgress(0);
+	        mDialog.setMessage("Connessione in corso..");
+	        mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 	        mDialog.show();
 		}
 		
-	    protected Boolean doInBackground(Void... params) {
+	    protected String doInBackground(Void... params) {
+	    	ClientResponse clientResponse = new ClientResponse();
 	        try {
 	        	Client client = new Client("http://10.0.3.2:8080/AlessioWebapp/users/");
-	        	ClientResponse clientResponse = new ClientResponse();
 	        	int tentativi = 0;
 	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
 	        		clientResponse = client.postBaseURI(userInfo, hasIdOnRemoteDb ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
@@ -223,13 +222,15 @@ public class MainActivity extends Activity {
 				if(clientResponse.getIdOnRemoteDB()>0) {
 					livesLeft = clientResponse.getLivesLeft();
 					dbAdapter.updateUser(1, clientResponse.getIdOnRemoteDB());
+					canPlay = true;
 				} else {
 					// TODO: gestione errore remoto (id su db remote non ritornato)
+					canPlay = false;
 				}
 	        } catch (Exception e) {
-	        	exception = true;
+	        	canPlay = false;
 	        }
-	        return exception;
+	        return clientResponse.getErrorMessage();
 	    }
 	    
 	    public int getLivesLeft() {
@@ -237,9 +238,9 @@ public class MainActivity extends Activity {
 	    }
 
 	    @Override
-	    protected void onPostExecute(Boolean result) {
+	    protected void onPostExecute(String result) {
 	    	mDialog.dismiss();
-	    	if(!exception) {
+	    	if(canPlay) {
 		    	Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
 				intent.putExtra("imeiNumber", imeiNumber);
 				intent.putExtra("deviceName", deviceName);
@@ -247,7 +248,7 @@ public class MainActivity extends Activity {
 				startActivity(intent); 
 			} else {
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);
-				alertDialogBuilder.setCancelable(false).setMessage("Errore");
+				alertDialogBuilder.setCancelable(false).setMessage(result);
 				alertDialogBuilder.setNeutralButton("OK", new DialogInterface.OnClickListener() {
 		    		public void onClick(DialogInterface dialog,int id) {
 		    			dialog.cancel();

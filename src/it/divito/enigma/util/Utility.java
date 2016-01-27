@@ -24,4 +24,11 @@ public class Utility {
         return clientResponse;
 	}
 	
+	public static ClientResponse createClientResponseError(String errorMessage) {
+		ClientResponse clientResponse = new ClientResponse();
+		clientResponse.setIdOnRemoteDB(-1);
+		clientResponse.setLivesLeft(-1);
+		clientResponse.setErrorMessage(errorMessage);
+		return clientResponse;
+	}
 }
