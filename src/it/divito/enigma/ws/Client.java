@@ -1,9 +1,11 @@
 package it.divito.enigma.ws;
 
 import it.divito.enigma.database.UserInfo;
+import it.divito.enigma.util.Constants;
 import it.divito.enigma.util.Utility;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -51,10 +53,11 @@ public class Client {
             DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
             HttpPost postRequest = new HttpPost(getBase() + strUrl);
             
-            StringEntity input = new StringEntity(json.toString(), HTTP.UTF_8);
-            input.setContentType("application/json");
-            input.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+            StringEntity input = new StringEntity(json.toString());
+//            input.setContentType("application/json");
+//            input.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
             postRequest.setEntity(input);
+            postRequest.setHeader("Content-type", "application/json");
 
             HttpResponse response = httpClient.execute(postRequest);
             httpClient.getConnectionManager().shutdown();
@@ -63,12 +66,14 @@ public class Client {
             clientResponse = Utility.parseWSResponse(jsonResponse);
             
     	} catch (JSONException e) {
+    		e.printStackTrace();
     		System.out.println("JSONException: " + e.getMessage());
     		clientResponse = Utility.createClientResponseError(e.getMessage());
     	} catch (ClientProtocolException e) {
     		System.out.println("ClientProtocolException: " + e.getMessage());
     		clientResponse = Utility.createClientResponseError(e.getMessage());
     	} catch (IOException e) {
+    		e.printStackTrace();
     		System.out.println("IOException: " + e.getMessage());
     		clientResponse = Utility.createClientResponseError(e.getMessage());
     	}
@@ -85,6 +90,5 @@ public class Client {
 
         return result;      
     }
-    
-   
+
 }
