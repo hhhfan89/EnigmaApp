@@ -8,6 +8,8 @@ public class UserInfo {
 	private int livesLeft;
 	private long idOnRemoteDB;
 	
+	public UserInfo() {}
+	
 	public UserInfo(int livesLeft, long idOnRemoteDB) {
 		this.livesLeft = livesLeft;
 		this.idOnRemoteDB = idOnRemoteDB;

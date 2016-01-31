@@ -25,8 +25,8 @@ public interface Constants {
 
 	// Remote Webapp params
 	public static final String WS_HOST = "http://enigmawebappopenshift-enigmawebapp.rhcloud.com";
-	public static final String WS_LOCALHOST = "http://localhost:8080";
-	public static final String WS_APP_NAME = "Prova";
+	public static final String WS_LOCALHOST = "http://10.0.3.2:8080";
+	public static final String WS_APP_NAME = "EnigmaWebapp/enigma";
 	
 	public static final String WS_OPERATION_SAVE_USER = File.separator + "users" + File.separator + "saveUser";
 	public static final String WS_OPERATION_CHECK_USER = File.separator + "users" + File.separator + "checkUser";

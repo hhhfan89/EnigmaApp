@@ -215,10 +215,10 @@ public class MainActivity extends Activity {
 	        try {
 	        	Client client = new Client(Constants.WS_HOST + File.separator + Constants.WS_APP_NAME);
 	        	int tentativi = 0;
-	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
+//	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
 	        		clientResponse = client.postBaseURI(userInfo, hasIdOnRemoteDb ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
 	        		tentativi++;
-	        	}
+//	        	}
 
 	        	// Se è stato recuperato l'id remoto, faccio l'update, altrimenti.. (TODO)
 				if(clientResponse.getIdOnRemoteDB()>0) {
