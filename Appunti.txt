@@ -20,3 +20,19 @@ Si può aggiungere su DB locale/remote un campo di check (timestamp di inseriment
 da Android al WS, così 1) si verifica se ci è stata una manomissione del db locale e 2) si possono fare query più 
 efficienti, senza usare imei/mac/deviceName, in accoppiata con "idOnRemoteDB" --> quando interrogo il DB remoto, 
 controllo sia l'idOnRemoteDB che il campo check, e tutti e due devono essere uguali per tutti e due i DB.
+
+
+02/02
+Gestione domande: 
+1) ogni domanda ha un livello ben preciso di difficoltà --> un livello = n domande. (Secondo me 1 livello - poche domande, massimo 3-4, se si gioca tutti in contemporanea..)
+2) Una volta che l'utente ha a disposizione la domanda, conviene salvarla in locale, in modo tale che si evita una connessione al db remoto per il recupero di quest'ultima.. 
+Ma quanto può pesare questa cosa? E se l'utente cancella la domanda (pulendo la cache? Vedi se è possibile)? --> se la domanda non c'è, mi connetto al db remoto, ma gli
+devo dare sempre la stessa domanda.. come fare questa associazione
+3) Prevedere campo "livello" per l'utente, che identifica quale domanda deve prendere.
+
+
+05/02
+1) domanda: deve avere un limite di tempo (1 ora ad esempio): quindi me la salvo in locale, ma una volta scaduto il tempo/risposto alla domanda, deve essere eliminata.
+ma una volta che rispondo/scade il tempo, alla volta successiva devo riproporre la stessa identica domanda, oppure un'altra?
+
+2) TO BE: aggiungere timer / notification bar

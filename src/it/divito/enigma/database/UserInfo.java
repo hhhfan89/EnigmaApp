@@ -7,6 +7,7 @@ public class UserInfo {
 	private String deviceName;
 	private int livesLeft;
 	private long idOnRemoteDB;
+	private int level;
 	
 	public UserInfo() {}
 	
@@ -50,6 +51,14 @@ public class UserInfo {
 
 	public void setDeviceName(String deviceName) {
 		this.deviceName = deviceName;
+	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
 	}
 	
 }

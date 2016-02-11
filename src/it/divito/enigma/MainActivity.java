@@ -1,13 +1,13 @@
 package it.divito.enigma;
 
-import java.io.File;
-
 import it.divito.enigma.database.DatabaseAdapter;
 import it.divito.enigma.database.UserInfo;
 import it.divito.enigma.util.Constants;
-import it.divito.enigma.util.Utility;
 import it.divito.enigma.ws.Client;
 import it.divito.enigma.ws.ClientResponse;
+
+import java.io.File;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
 		// (tanto è una variabile int, niente di che)
 	}
 	
+	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -63,10 +64,29 @@ public class MainActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	@Override
+	protected void onStart() {
+		super.onStart();
+		dbAdapter.open();
+	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		dbAdapter.close();
+	}
+	
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		dbAdapter.close();
 	}
 	
 	/**
@@ -134,7 +154,6 @@ public class MainActivity extends Activity {
 	}
 	
 	private void checkDevice() {
-		dbAdapter.open(); 
 		imeiNumber = getImeiNumber();
 		deviceName = getDeviceName();
 		macAddress = getMacAddress();
@@ -146,14 +165,13 @@ public class MainActivity extends Activity {
 		userInfo.setImei(imeiNumber);
 		userInfo.setDeviceName(deviceName);
 		userInfo.setMacAddress(macAddress);
-		dbAdapter.close();
 		
 		// Nessuna vita rimasta (su DB locale)
 		if(userInfo.getLivesLeft() == 0) {
 			createNoLivesAlertDialog().show();
 		}
 		
-		new RetrieveFeedTask(this, userInfo.getIdOnRemoteDB()!=0 ? true : false, userInfo).execute();
+		new RetrieveFeedTask(this, userInfo).execute();
 	}
 	
 	private AlertDialog createNoLivesAlertDialog() {
@@ -163,9 +181,7 @@ public class MainActivity extends Activity {
 		// Imposta il messaggio
 		alertDialogBuilder.setPositiveButton("Si", new DialogInterface.OnClickListener() {
             public void onClick(final DialogInterface dialog, final int id) {
-            	dbAdapter.open(); 
             	dbAdapter.addLife(imeiNumber, deviceName, macAddress);
-            	dbAdapter.close();
             	Toast.makeText(getApplicationContext(), "Go to the game!", Toast.LENGTH_SHORT).show();
             	startGame();
             	//startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));     
@@ -183,9 +199,9 @@ public class MainActivity extends Activity {
 	
 	private void startGame() {
 		Intent intent = new Intent(this, QuestionActivity.class);
-		intent.putExtra("imeiNumber", imeiNumber);
-		intent.putExtra("deviceName", deviceName);
-		intent.putExtra("macAddress", macAddress);
+//		intent.putExtra("imeiNumber", imeiNumber);
+//		intent.putExtra("deviceName", deviceName);
+//		intent.putExtra("macAddress", macAddress);
 		startActivity(intent);
 	}
 	
@@ -196,14 +212,12 @@ public class MainActivity extends Activity {
 		private boolean canPlay;
 		
 		private Context mContext;
-		private boolean hasIdOnRemoteDb;
 		private UserInfo userInfo;
 		
-		public RetrieveFeedTask(Context context, boolean hasIdOnRemoteDb, UserInfo userInfo) {
+		public RetrieveFeedTask(Context context, UserInfo userInfo) {
 			this.canPlay = false;
 			this.mContext = context;
 			this.userInfo = userInfo;
-			this.hasIdOnRemoteDb = hasIdOnRemoteDb;
 			mDialog = new ProgressDialog(context);
 	        mDialog.setMessage("Connessione in corso..");
 	        mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -215,10 +229,12 @@ public class MainActivity extends Activity {
 	        try {
 	        	Client client = new Client(Constants.WS_HOST + File.separator + Constants.WS_APP_NAME);
 	        	int tentativi = 0;
-//	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
-	        		clientResponse = client.postBaseURI(userInfo, hasIdOnRemoteDb ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
+	        	while(clientResponse.getIdOnRemoteDB()<=0 && tentativi<5) {
+	        		clientResponse = client.postBaseURI(userInfo, userInfo.getIdOnRemoteDB()!=0 ? Constants.WS_OPERATION_CHECK_USER : Constants.WS_OPERATION_SAVE_USER);
+	        		userInfo.setIdOnRemoteDB(clientResponse.getIdOnRemoteDB());
+	        		userInfo.setLevel(clientResponse.getLevel());
 	        		tentativi++;
-//	        	}
+	        	}
 
 	        	// Se è stato recuperato l'id remoto, faccio l'update, altrimenti.. (TODO)
 				if(clientResponse.getIdOnRemoteDB()>0) {
@@ -244,9 +260,11 @@ public class MainActivity extends Activity {
 	    	mDialog.dismiss();
 	    	if(canPlay) {
 		    	Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
-				intent.putExtra("imeiNumber", imeiNumber);
-				intent.putExtra("deviceName", deviceName);
-				intent.putExtra("macAddress", macAddress);
+//				intent.putExtra("imeiNumber", imeiNumber);
+//				intent.putExtra("deviceName", deviceName);
+//				intent.putExtra("macAddress", macAddress);
+		    	intent.putExtra(Constants.INTENT_ID_ON_REMOTE_DB, userInfo.getIdOnRemoteDB());
+		    	intent.putExtra(Constants.INTENT_USER_LEVEL, userInfo.getLevel());
 				startActivity(intent); 
 			} else {
 				AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mContext);

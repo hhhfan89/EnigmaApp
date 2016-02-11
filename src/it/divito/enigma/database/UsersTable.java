@@ -46,8 +46,8 @@ public class UsersTable {
 		//long result;
 		UserInfo userInfo = null;
 		try {
-			database.insertOrThrow(Constants.TABLE_NAME, null, initialValues);
-			userInfo = new UserInfo(Constants.DEFAULT_LIVES_LEFT, Constants.DEFAULT_LIVES_LEFT);
+			database.insertOrThrow(Constants.TABLE_USERS, null, initialValues);
+			userInfo = new UserInfo(Constants.DEFAULT_LIVES_LEFT, Constants.DEFAULT_ID_ON_REMOTE_DB);
 		} catch (SQLiteConstraintException e) {
 			// Vuol dire che è già presente nel DB, ma comunque può avere altre vite..
 			userInfo = checkLives(imeiNumber, deviceName, macAddress);
@@ -61,7 +61,7 @@ public class UsersTable {
 		String selection = Constants.COLUMN_IMEI + " = ? AND "
 						 + Constants.COLUMN_DEVICE_NAME + " = ? AND " 
 						 + Constants.COLUMN_MAC + " = ?";
-		Cursor c = database.query(Constants.TABLE_NAME, new String[]{Constants.COLUMN_LIVES, Constants.COLUMN_ID_ON_REMOTE_DB}, selection, new String[]{imeiNumber, deviceName, macAddress}, null, null, null);
+		Cursor c = database.query(Constants.TABLE_USERS, new String[]{Constants.COLUMN_LIVES, Constants.COLUMN_ID_ON_REMOTE_DB}, selection, new String[]{imeiNumber, deviceName, macAddress}, null, null, null);
 		if(c.moveToNext()) {
 			return new UserInfo(c.getInt(0), c.getInt(1));
 		}
@@ -75,7 +75,7 @@ public class UsersTable {
 						   + Constants.COLUMN_DEVICE_NAME + " = ? AND " 
 						   + Constants.COLUMN_MAC + " = ?";
 		String[] whereArgs = new String[]{imeiNumber, deviceName, macAddress};
-		return database.update(Constants.TABLE_NAME, updateValues, whereClause, whereArgs) > 0;
+		return database.update(Constants.TABLE_USERS, updateValues, whereClause, whereArgs) > 0;
 	}
 
 
@@ -85,7 +85,7 @@ public class UsersTable {
 						   + Constants.COLUMN_DEVICE_NAME + " = ? AND " 
 						   + Constants.COLUMN_MAC + " = ?";
 		String[] whereArgs = new String[]{imeiNumber, deviceName, macAddress};
-		return database.update(Constants.TABLE_NAME, updateValues, whereClause, whereArgs) > 0;
+		return database.update(Constants.TABLE_USERS, updateValues, whereClause, whereArgs) > 0;
 	}
 
 
@@ -94,7 +94,7 @@ public class UsersTable {
 		updateValues.put(Constants.COLUMN_ID_ON_REMOTE_DB, idOnRemoteDB);
 		String whereClause = Constants.COLUMN_ID + " = ?";
 		String[] whereArgs = new String[]{Integer.toString(idOnLocalDB)};
-		return database.update(Constants.TABLE_NAME, updateValues, whereClause, whereArgs) > 0;
+		return database.update(Constants.TABLE_USERS, updateValues, whereClause, whereArgs) > 0;
 	}
 	
 }

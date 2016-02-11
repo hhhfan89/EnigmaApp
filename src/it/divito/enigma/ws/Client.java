@@ -63,7 +63,7 @@ public class Client {
             httpClient.getConnectionManager().shutdown();
             
             JSONObject jsonResponse  = new JSONObject(getResult(response).toString());
-            clientResponse = Utility.parseWSResponse(jsonResponse);
+            clientResponse = Utility.parseUserResponse(jsonResponse);
             
     	} catch (JSONException e) {
     		e.printStackTrace();
@@ -80,6 +80,46 @@ public class Client {
     	
     	return clientResponse;
     }
+    
+    
+    public QuestionResponse getQuestion(String strUrl, int level) {
+
+    	QuestionResponse questionResponse = null;
+    	try {
+        	JSONObject json = new JSONObject();
+        	json.put("userLevel", level);
+        	
+            HttpParams httpParameters = new BasicHttpParams();
+            int timeoutConnection = 3000;
+            HttpConnectionParams.setConnectionTimeout(httpParameters, timeoutConnection);
+            int timeoutSocket = 15000;
+            HttpConnectionParams.setSoTimeout(httpParameters, timeoutSocket);
+            DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
+            HttpPost postRequest = new HttpPost(getBase() + strUrl);
+            
+            StringEntity input = new StringEntity(json.toString());
+            postRequest.setEntity(input);
+            postRequest.setHeader("Content-type", "application/json");
+
+            HttpResponse response = httpClient.execute(postRequest);
+            httpClient.getConnectionManager().shutdown();
+            
+            JSONObject jsonResponse  = new JSONObject(getResult(response).toString());
+            questionResponse = Utility.parseQuestionResponse(jsonResponse);
+            
+    	} catch (JSONException e) {
+    		e.printStackTrace();
+    		System.out.println("JSONException: " + e.getMessage());
+    	} catch (ClientProtocolException e) {
+    		System.out.println("ClientProtocolException: " + e.getMessage());
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    		System.out.println("IOException: " + e.getMessage());
+    	}
+    	
+    	return questionResponse;
+    }
+    
     
     private StringBuilder getResult(HttpResponse response) throws IllegalStateException, IOException {
         StringBuilder result = new StringBuilder();
